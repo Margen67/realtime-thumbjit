@@ -66,6 +66,22 @@ namespace templating {
             makeLoreg(destination));
         }
     }
+    template<Opcodes::shift_type_e op>
+    constexpr insn_t _shiftreg(Register_e destination, Register_e source, uword_t bits) {
+        CE_ASSERT(!eitherHigh(destination, source), "Cant imm shift a hireg.");
+        return Opcodes::move_shifted_reg(op, bits, 
+            makeLoreg(source), 
+            makeLoreg(destination));
+    }
+
+    #define REGSHIFTER(name, op)      constexpr insn_t name (Register_e destination, Register_e source, uword_t bits) { \
+    return _shiftreg<Opcodes::shift_type_e::op>(destination, source, bits);\
+    }
+    REGSHIFTER(lsr, LSR)
+    REGSHIFTER(lsl, LSL)
+    REGSHIFTER(asr, ASR)
+    #undef REGSHIFTER
+
 
     constexpr insn_t add(Register_e destination, Register_e source) {
         if(eitherHigh(destination, source)) {
@@ -149,6 +165,35 @@ namespace templating {
         }
     }
 
+    constexpr insn_t swi(uword_t sycall) {
+        CE_ASSERT(sycall < 256, "swi only does syscalls up to 255");
+        return Opcodes::software_interrupt(sycall);
+    }
+    template<Opcodes::condition_e op>
+    constexpr insn_t _cond(int offset) {
+        CE_ASSERT((char)(offset&0xff) == offset, "offset must be a signed integer between -127 and 128");
+        return Opcodes::cond_branch(op, offset);
+    }
+
+    #define CONDBRANCH(name, op)  constexpr insn_t name(int offset) {\
+        return _cond<Opcodes::condition_e:: op >(offset); \
+    }
+    CONDBRANCH(beq, BEQ)
+    CONDBRANCH(bne, BNE)
+    CONDBRANCH(bcs, BCS)
+    CONDBRANCH(bcc, BCC)
+    CONDBRANCH(bmi, BMI)
+    CONDBRANCH(bpl, BPL)
+    CONDBRANCH(bvs, BVS)
+    CONDBRANCH(bvc, BVC)
+    CONDBRANCH(bhi, BHI)
+    CONDBRANCH(bls, BLS)
+    CONDBRANCH(bge, BGE)
+    CONDBRANCH(blt, BLT)
+    CONDBRANCH(bgt, BGT)
+    CONDBRANCH(ble, BLE)
+    #undef CONDBRANCH
+
 
 
 
@@ -190,7 +235,6 @@ namespace templating {
         }
 
     };
-
 
 
     constexpr uword_t MAX_TEMPLATE_INSNS = 256;
@@ -253,7 +297,7 @@ namespace templating {
 
     template<auto& finalStream>
     struct RTTemplate {
-        static constexpr uword_t template_code_size = finalStream.size();
+        static constexpr uword_t template_code_size = finalStream.size() ;
         static constexpr uword_t template_abstract_count = finalStream.abstractCount();
         insn_t code[template_code_size];
         AbstractMarker markers[template_abstract_count];
@@ -282,8 +326,8 @@ namespace templating {
                 }
             }
         }
-
-        void emit(void* dataDestination) {
+        inline 
+        void emit(void* dataDestination) const {
             uword_t pc = reinterpret_cast<uword_t>(dataDestination);
             KnowableState state{0};
 
@@ -301,7 +345,9 @@ namespace templating {
 
     constexpr InsnStream hmmm() {
         InsnStream result;
+
         result << add(Register_e::r0, Register_e::r1);
+        result << lsr(Register_e::r3, Register_e::r2);
         result << bx(Register_e::lr);
         return result;
     }
