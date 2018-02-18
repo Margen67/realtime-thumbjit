@@ -233,7 +233,7 @@ namespace Opcodes {
  
 
     constexpr insn_t high_op(high_op_e op, 
-    high_flag_e hDest, high_flag_e hSource, anyreg_t source, anyreg_t dest) {
+   high_flag_e hSource, high_flag_e hDest, anyreg_t source, anyreg_t dest) {
         OPSTART;
         bits << dest << encoding::ANYREG_BITS 
         << source << encoding::ANYREG_BITS
@@ -379,5 +379,3 @@ namespace Opcodes {
 
 #undef OPSTART
 #undef OPEND
-
-
