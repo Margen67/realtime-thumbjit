@@ -171,7 +171,7 @@ namespace templating {
         constexpr AbstractMarker() : m_code_index(0), m_resolver(nullptr) {}
         constexpr AbstractMarker(uword_t code_index, AbstractResolver_t resolver) 
         : m_code_index(code_index),
-        m_resolver(resolver) {}y
+        m_resolver(resolver) {}
     };
 
     constexpr uword_t MAX_TEMPLATE_INSNS = 256;
