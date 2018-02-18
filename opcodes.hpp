@@ -6,7 +6,13 @@ constexpr auto acceptEnumClass(T x) {
     else
         return x;
 }
-
+template<uword_t n>
+constexpr char CE_ASSERT(bool expr, const char (&errstring)[n]) {
+    if(!(expr))
+        return errstring[n+2];
+    else
+        return 0;
+}
 template<typename T>
 constexpr uword_t bitSizeof = sizeof(T) * 8;
 namespace Opcodes {
